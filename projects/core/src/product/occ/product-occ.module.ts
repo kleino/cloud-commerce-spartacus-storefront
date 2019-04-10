@@ -2,7 +2,6 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 
-import { ProductLoaderService } from './product.service';
 import { ProductSearchLoaderService } from './product-search.service';
 import { OccModule } from '../../occ/occ.module';
 import { defaultOccProductConfig } from '../config/product-config';
@@ -11,6 +10,8 @@ import { ProductReviewsAdapter } from '../connectors/reviews/product-reviews.ada
 import { OccProductReviewsAdapter } from './occ-product-reviews.adapter';
 import { PRODUCT_REVIEWS_LIST_NORMALIZER } from '../connectors/reviews/converters';
 import { OccProductReviewsListNormalizer } from './converters/occ-product-reviews-list-normalizer';
+import { OccProductAdapter } from './occ-product.adapter';
+import { ProductAdapter } from '../connectors/product/product.adapter';
 
 @NgModule({
   imports: [
@@ -20,8 +21,11 @@ import { OccProductReviewsListNormalizer } from './converters/occ-product-review
     ConfigModule.withConfig(defaultOccProductConfig),
   ],
   providers: [
-    ProductLoaderService,
     ProductSearchLoaderService,
+    {
+      provide: ProductAdapter,
+      useClass: OccProductAdapter,
+    },
     {
       provide: ProductReviewsAdapter,
       useClass: OccProductReviewsAdapter,
