@@ -2,7 +2,6 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 
-import { ProductSearchLoaderService } from './product-search.service';
 import { OccModule } from '../../occ/occ.module';
 import { defaultOccProductConfig } from '../config/product-config';
 import { ConfigModule } from '../../config/index';
@@ -15,6 +14,8 @@ import { ProductAdapter } from '../connectors/product/product.adapter';
 import { PRODUCT_NORMALIZER } from '../connectors/product/converters';
 import { ProductImageNormalizer } from './converters/product-image-normalizer';
 import { ProductReferenceNormalizer } from './converters/product-reference-normalizer';
+import { ProductSearchAdapter } from '../connectors/search/product-search.adapter';
+import { OccProductSearchAdapter } from './occ-product-search.adapter';
 
 @NgModule({
   imports: [
@@ -24,7 +25,6 @@ import { ProductReferenceNormalizer } from './converters/product-reference-norma
     ConfigModule.withConfig(defaultOccProductConfig),
   ],
   providers: [
-    ProductSearchLoaderService,
     {
       provide: ProductAdapter,
       useClass: OccProductAdapter,
@@ -38,6 +38,10 @@ import { ProductReferenceNormalizer } from './converters/product-reference-norma
       provide: PRODUCT_NORMALIZER,
       useClass: ProductReferenceNormalizer,
       multi: true,
+    },
+    {
+      provide: ProductSearchAdapter,
+      useClass: OccProductSearchAdapter,
     },
     {
       provide: ProductReviewsAdapter,

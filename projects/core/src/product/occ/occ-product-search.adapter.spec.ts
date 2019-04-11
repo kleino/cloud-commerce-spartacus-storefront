@@ -1,4 +1,20 @@
 import { TestBed } from '@angular/core/testing';
+
+// import { OccProductSearchAdapter } from './occ-product-search.adapter';
+
+describe('OccProductSearchAdapter', () => {
+  beforeEach(() => TestBed.configureTestingModule({}));
+
+  it('should be created', () => {
+    // const service: OccProductSearchAdapter = TestBed.get(
+    //   OccProductSearchAdapter
+    // );
+    // expect(service).toBeTruthy();
+  });
+});
+
+/*
+import { TestBed } from '@angular/core/testing';
 import {
   HttpClientTestingModule,
   HttpTestingController,
@@ -108,3 +124,5 @@ describe('ProductSearchLoaderService', () => {
     });
   });
 });
+
+ */
