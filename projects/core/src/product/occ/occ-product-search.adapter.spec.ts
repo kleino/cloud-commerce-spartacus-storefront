@@ -1,36 +1,33 @@
 import { TestBed } from '@angular/core/testing';
 
-// import { OccProductSearchAdapter } from './occ-product-search.adapter';
-
-describe('OccProductSearchAdapter', () => {
-  beforeEach(() => TestBed.configureTestingModule({}));
-
-  it('should be created', () => {
-    // const service: OccProductSearchAdapter = TestBed.get(
-    //   OccProductSearchAdapter
-    // );
-    // expect(service).toBeTruthy();
-  });
-});
-
-/*
-import { TestBed } from '@angular/core/testing';
+import { OccProductSearchAdapter } from './occ-product-search.adapter';
+import {
+  ConverterService,
+  PRODUCT_SEARCH_NORMALIZER,
+  PRODUCT_SUGGESTIONS_LIST_NORMALIZER,
+} from '@spartacus/core';
 import {
   HttpClientTestingModule,
   HttpTestingController,
 } from '@angular/common/http/testing';
-
+import { OccEndpointsService } from '../../occ/services/occ-endpoints.service';
 import { SearchConfig } from '../model/search-config';
 import {
   ProductSearchPage,
   SuggestionList,
 } from '../../occ/occ-models/occ.models';
+import createSpy = jasmine.createSpy;
 
-import { ProductSearchLoaderService } from './product-search.service';
-import { defaultOccProductConfig } from '../config/product-config';
-import { DynamicTemplate } from '../../config/utils/dynamic-template';
-import { OccConfig } from '@spartacus/core';
-import { deepMerge } from '../../config/utils/deep-merge';
+class MockOccEndpointsService {
+  getUrl = createSpy('MockOccEndpointsService.getEndpoint').and.callFake(
+    // tslint:disable-next-line:no-shadowed-variable
+    (url, { term, query }) => url + (term || query)
+  );
+}
+
+class MockConvertService {
+  pipeable = createSpy().and.returnValue(x => x);
+}
 
 const queryText = 'test';
 const searchResults: ProductSearchPage = { products: [{ code: '123' }] };
@@ -38,42 +35,38 @@ const suggestions: SuggestionList = { suggestions: [{ value: 'test' }] };
 const mockSearchConfig: SearchConfig = {
   pageSize: 5,
 };
-const mockOccModuleConfig: OccConfig = {
-  backend: {
-    occ: {
-      baseUrl: '',
-      prefix: '',
-    },
-  },
-  site: {
-    baseSite: '',
-    language: '',
-    currency: '',
-  },
-};
 
-describe('ProductSearchLoaderService', () => {
-  let service: ProductSearchLoaderService;
+describe('OccProductSearchAdapter', () => {
+  let service: OccProductSearchAdapter;
   let httpMock: HttpTestingController;
+  let endpoints: OccEndpointsService;
+  let converter: ConverterService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
       providers: [
-        ProductSearchLoaderService,
+        OccProductSearchAdapter,
         {
-          provide: OccConfig,
-          useValue: deepMerge({}, mockOccModuleConfig, defaultOccProductConfig),
+          provide: OccEndpointsService,
+          useClass: MockOccEndpointsService,
         },
+        { provide: ConverterService, useClass: MockConvertService },
       ],
     });
 
-    service = TestBed.get(ProductSearchLoaderService);
+    service = TestBed.get(OccProductSearchAdapter);
+    endpoints = TestBed.get(OccEndpointsService);
     httpMock = TestBed.get(HttpTestingController);
+    converter = TestBed.get(ConverterService);
   });
 
   afterEach(() => {
     httpMock.verify();
+  });
+
+  it('should be created', () => {
+    expect(service).toBeTruthy();
   });
 
   describe('query text search', () => {
@@ -82,47 +75,64 @@ describe('ProductSearchLoaderService', () => {
         expect(result).toEqual(searchResults);
       });
 
-      const mockReq = httpMock.expectOne(req => {
-        return (
-          req.method === 'GET' &&
-          req.url ===
-            `/${DynamicTemplate.resolve(
-              defaultOccProductConfig.backend.occ.endpoints.productSearch,
-              { query: queryText, searchConfig: mockSearchConfig }
-            )}&pageSize=${mockSearchConfig.pageSize.toString()}`
-        );
-      });
+      const mockReq = httpMock.expectOne(
+        req => req.method === 'GET' && req.url === 'productSearchtest'
+      );
 
       expect(mockReq.cancelled).toBeFalsy();
       expect(mockReq.request.responseType).toEqual('json');
+      expect(endpoints.getUrl).toHaveBeenCalledWith(
+        'productSearch',
+        { query: queryText },
+        {
+          pageSize: mockSearchConfig.pageSize,
+          currentPage: undefined,
+          sort: undefined,
+        }
+      );
       mockReq.flush(searchResults);
+    });
+
+    it('should call converter', () => {
+      service.loadSearch(queryText, mockSearchConfig).subscribe();
+      httpMock.expectOne('productSearchtest').flush(searchResults);
+
+      expect(converter.pipeable).toHaveBeenCalledWith(
+        PRODUCT_SEARCH_NORMALIZER
+      );
     });
   });
 
   describe('query product suggestions', () => {
     it('should return suggestions for given term', () => {
       service
-        .loadSuggestions(queryText, mockSearchConfig.pageSize)
+        .loadSuggestionList(queryText, mockSearchConfig.pageSize)
         .subscribe(suggestionList => {
           expect(suggestionList).toEqual(suggestions);
         });
 
-      const mockReq = httpMock.expectOne(req => {
-        return (
-          req.method === 'GET' &&
-          req.url ===
-            `/${DynamicTemplate.resolve(
-              defaultOccProductConfig.backend.occ.endpoints.productSuggestions,
-              { term: queryText, max: mockSearchConfig.pageSize }
-            )}`
-        );
-      });
+      const mockReq = httpMock.expectOne(
+        req => req.method === 'GET' && req.url === 'productSuggestionstest'
+      );
 
       expect(mockReq.cancelled).toBeFalsy();
       expect(mockReq.request.responseType).toEqual('json');
+      expect(endpoints.getUrl).toHaveBeenCalledWith('productSuggestions', {
+        term: queryText,
+        max: mockSearchConfig.pageSize.toString(),
+      });
       mockReq.flush(suggestions);
+    });
+
+    it('should call converter', () => {
+      service
+        .loadSuggestionList(queryText, mockSearchConfig.pageSize)
+        .subscribe();
+      httpMock.expectOne('productSuggestionstest').flush(suggestions);
+
+      expect(converter.pipeable).toHaveBeenCalledWith(
+        PRODUCT_SUGGESTIONS_LIST_NORMALIZER
+      );
     });
   });
 });
-
- */

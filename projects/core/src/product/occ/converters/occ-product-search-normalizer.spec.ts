@@ -13,7 +13,7 @@ const mockSource: ProductSearchPage = {
   products: [{ images: [] }, { images: [] }],
 };
 
-fdescribe('OccProductSearchNormalizer', () => {
+describe('OccProductSearchNormalizer', () => {
   let normalizer: OccProductSearchNormalizer;
 
   beforeEach(() => {
