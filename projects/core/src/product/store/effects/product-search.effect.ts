@@ -6,7 +6,6 @@ import { Observable, of } from 'rxjs';
 import { map, catchError, switchMap } from 'rxjs/operators';
 
 import * as productsSearchActions from '../actions/product-search.action';
-import { ProductImageNormalizer } from '../../occ/converters/product-image-normalizer';
 import { ProductSearchConnector } from '../../connectors/search/product-search.connector';
 
 @Injectable()
@@ -22,7 +21,6 @@ export class ProductsSearchEffects {
         .search(action.payload.queryText, action.payload.searchConfig)
         .pipe(
           map(data => {
-            this.productImageConverter.convertList(data.products);
             return new productsSearchActions.SearchProductsSuccess(
               data,
               action.auxiliary
@@ -70,7 +68,6 @@ export class ProductsSearchEffects {
 
   constructor(
     private actions$: Actions,
-    private productSearchConnector: ProductSearchConnector,
-    private productImageConverter: ProductImageNormalizer
+    private productSearchConnector: ProductSearchConnector
   ) {}
 }

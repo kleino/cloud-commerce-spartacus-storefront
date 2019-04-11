@@ -16,6 +16,8 @@ import { ProductImageNormalizer } from './converters/product-image-normalizer';
 import { ProductReferenceNormalizer } from './converters/product-reference-normalizer';
 import { ProductSearchAdapter } from '../connectors/search/product-search.adapter';
 import { OccProductSearchAdapter } from './occ-product-search.adapter';
+import { PRODUCT_SEARCH_NORMALIZER } from '../connectors/search/converters';
+import { OccProductSearchNormalizer } from './converters/occ-product-search-normalizer';
 
 @NgModule({
   imports: [
@@ -42,6 +44,11 @@ import { OccProductSearchAdapter } from './occ-product-search.adapter';
     {
       provide: ProductSearchAdapter,
       useClass: OccProductSearchAdapter,
+    },
+    {
+      provide: PRODUCT_SEARCH_NORMALIZER,
+      useClass: OccProductSearchNormalizer,
+      multi: true,
     },
     {
       provide: ProductReviewsAdapter,
