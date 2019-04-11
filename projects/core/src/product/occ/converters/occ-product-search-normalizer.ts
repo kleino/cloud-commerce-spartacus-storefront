@@ -16,7 +16,11 @@ export class OccProductSearchNormalizer
       ...target,
       ...source,
     };
-    this.productImageNormalizer.convertList(target.products);
+    if (source.products) {
+      target.products = source.products.map(product =>
+        this.productImageNormalizer.convert(product)
+      );
+    }
     return target;
   }
 }
